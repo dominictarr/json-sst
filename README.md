@@ -5,6 +5,10 @@ Newline Separated JSON, Sorted String Tables.
 This module is currently README only, just writing up these ideas,
 hopefully implement them down the road, and use them to implement a leveldb clone in pure js.
 
+# Stability
+
+Experimental: Expect the unexpected. Please provide feedback on api and you use-case
+
 ## API
 
 ### openSST(file, cb)
