@@ -2,8 +2,9 @@
 
 Newline Separated JSON, Sorted String Tables.
 
-This module is currently README only, just writing up these ideas,
-hopefully implement them down the road, and use them to implement a leveldb clone in pure js.
+This module is currently _README only_, just writing up these ideas,
+hopefully to implement them soon, and use them to build a  
+[leveldown](https://github.com/rvagg/node-leveldown) clone in pure js.
 
 # Stability
 
