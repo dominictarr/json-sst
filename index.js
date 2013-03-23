@@ -1,29 +1,6 @@
 var EventEmitter = require('events').EventEmitter
 var fs           = require('fs')
-var JsonIterator = require('./json-iterator')
-
-function once (fun) {
-  var called = false
-  return function () {
-    if(called) return
-    called = true
-    return fun.apply(this, arguments)
-  }
-}
-
-
-function open(file, cb) {
-  fs.stat(file, function (err, stat) {
-    if(err) return cb(err)
-    fs.open(file, 'r', function (err, fd) {
-      if(err) return cb(err)
-      stat.blklength = 512
-      stat.length = Math.ceil(stat.size / stat.blksize)
-      stat.fd = fd
-      cb(null, stat)
-    })
-  })
-}
+var u            = require('./util')
 
 var exports = module.exports = function (file) {
   //if(!cb) cb = it, it = null
@@ -33,24 +10,6 @@ var exports = module.exports = function (file) {
 
   var emitter = new EventEmitter()
 
-  /*
-  if(it) {
-    createSST(file, it, function (err) {
-      if(err) return cb(err)
-      open(file, function (err, _stat) {
-        emitter.stat = _stat
-        cb(null, emitter)
-      })
-    })
-  } else {
-    //open the file and read the footer.
-    open(file, function (err, _stat) {
-      emitter.stat = _stat
-      cb(null, emitter)
-    })
-  }
-  */
-
 /*
 Hmm, so the default case should be an iterator,
 and get is just a special-case - it's just an iterator
@@ -59,7 +18,7 @@ is the same for an iterator as for a get.
 */
 
   emitter.open = function (cb) {
-    open(file, function (err, _stat) {
+    u.open(file, function (err, _stat) {
       if(err) return cb(err)
       emitter._stat = stat
       emitter.opened = true
@@ -71,35 +30,16 @@ is the same for an iterator as for a get.
     if(!emitter.opened)
       throw new Error('SST is not yet opened!')
     //first, just support iterating over the entire sst.    
-    return JsonIterator(emitter._stat, opts)
+    return BlockIterator(emitter._stat, opts)
+      .pipe(u.json(opts.reverse))
   }
-
-/*
-  emitter.get = function (key, cb) {
-    //what is the total number of blocks?
-    ;(function read(left, right) {
-      var middle = Math.round((left + right)/2) //read center block
-      console.log('READ', left, right, '->', middle)
-      readBlock(middle, function (err, data) {
-        var _key = data.body[0].key
-        var key_ = data.body[data.body.length - 1].key
-        if(_key <= key && key <= key_) {
-          return cb(null, data)
-        }
-        if(_key < key)
-          read(middle, right)
-        else if(key < _key)
-          read(left, middle)
-      })
-    })(0, blockCount) 
-  }
-*/
 
 }
 
+
 exports.createSST = function (file, it, cb) {
   ws = fs.createWriteStream(file)
-  cb = once(cb)
+  cb = u.once(cb)
   var meta = {items: 0, length: 0, meta: true}
   ;(function next () {
     it.next(function (err, data) {
