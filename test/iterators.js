@@ -1,7 +1,6 @@
 var blockIterator = require('../block-iterator')
-var readIterator  = require('../iterator-reader')
-
 var u             = require('../util')
+var readIterator  = u.iteratorReader
 
 var fs = require('fs')
 var shasum = require('shasum')

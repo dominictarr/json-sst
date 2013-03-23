@@ -1,22 +1,15 @@
 var BlockIterator = require('../block-iterator')
+
 var fs = require('fs')
 var shasum = require('shasum')
 var test = require('tape')
 
-function readIterator (it, cb) {
-  var array = []
-  ;(function next () {
-    it.next(function (err, range) {
-      if(range)
-        return array.push(range), next()
+var pull = require('pull-stream')
+var split = require('pull-split')
 
-      else cb(null, array)
-    })
-  })();
-}
+var readIterator = require('../util').iteratorReader
 
 test('reverse.reverse == forward', function (t) {
-
   var file = '/tmp/whatever-test.json.sst'
   fs.stat(file, function (err, stat) {
     console.log(err, stat)
@@ -26,21 +19,29 @@ test('reverse.reverse == forward', function (t) {
 
       readIterator(BlockIterator(stat), function (err, array) {
         fore = array.map(function (e) {return shasum(e)})
-        console.log('FORWARD', fore)
+
+        /*
+        pull.readArray(array)
+          .pipe(split())
+          .pipe(pull.log())
+        */
+
+        console.log('FORWARD', fore, fore && rev)
         if(fore && rev) next()
       })
     
       readIterator(BlockIterator(stat, {reverse: true}), function (err, array) {
         rev = array.map(function (e) {return shasum(e)})
-        console.log('REVERSE', rev)
+        console.log('REVERSE', rev, fore && rev)
+        
         if(fore && rev) next()
       })
 
       function next () {
+        console.log('done')
         t.deepEqual(fore, rev.reverse())
         t.end()
       }
-
     })
   })
 })
