@@ -1,6 +1,26 @@
 
 var fs = require('fs')
-var Iterator = require('./pull-iterator') //require('async-iterator')
+//var Iterator = require('./pull-iterator') //require('async-iterator')
+
+
+var pull = require('pull-stream')
+
+var Iterator =
+pull.pipeableSource(function (next, close) {
+  var i = 0
+  return function (end, cb) {
+    if(end)
+      close ? close(function (err) {
+        cb(err || true)
+      }) : cb && cb(end)
+    else
+      next(i++, function (err, data) {
+        process.nextTick(function () {
+          cb(err || data == null, data) //means end in an iterator.
+        })
+      })
+  }
+})
 
 var shasum = require('shasum')
 
