@@ -9,14 +9,14 @@
   },
   "dependencies": {
     "async-iterator": "~1.1.0",
-    "pull-stream": "~1.1.0",
-    "pull-through": "~1.0.1",
+    "pull-stream": "~2.0.0",
+    "pull-through": "~1.0.4",
     "pull-split": "~0.1.0",
-    "pull-stream-range": "~1.0.0",
+    "pull-stream-range": "~1.1.0",
     "optimist": "~0.3.5"
   },
   "devDependencies": {
-    "tape": "~0.2.2",
+    "tape": "~0.3.0",
     "shasum": "0.0.2",
     "random-name": "~0.1.0"
   },
