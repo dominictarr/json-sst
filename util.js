@@ -5,7 +5,6 @@ exports.iteratorReader = function (read, cb) {
   var array = []
   ;(function next () {
     read(null, function  (err, range) {
-      console.log('read', range)
       if(range)
         return array.push(range), next()
 
@@ -20,7 +19,11 @@ exports.json = function (reverse) {
     .pipe(pull.map(function (data) {
     if(!data) return
     try { return JSON.parse(data) }
-    catch (err) {console.error([err, data])}
+    catch (err) {
+      if(err && err.name == 'SyntaxError')
+        return
+      throw err
+    }
    }))
   .pipe(pull.filter())
 }
@@ -34,16 +37,9 @@ exports.once = function (fun) {
   }
 }
 
-exports.open = function (file, cb) {
-  fs.stat(file, function (err, stat) {
-    if(err) return cb(err)
-    fs.open(file, 'r', function (err, fd) {
-      if(err) return cb(err)
-      stat.blklength = 512
-      stat.length = Math.ceil(stat.size / stat.blksize)
-      stat.fd = fd
-      cb(null, stat)
-    })
-  })
+exports.merge = function (to, from) {
+  for(var k in from) {
+    to[k] = to[k] || from[k]
+  }
+  return to
 }
-
