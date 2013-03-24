@@ -4,12 +4,13 @@ var shasum     = require('shasum')
 var test       = require('tape')
 var assert     = require('assert')
 var fs         = require('fs')
+var opts       = require('optimist').argv
 
 try {
   fs.unlinkSync('/tmp/whatever-test.json.sst')
 } catch (_) {}
 
-var l = 200, array = [], names = {}
+var l = opts.n || 200, array = [], names = {}
 while(l --) {
   var n = randomName(), d = new Date() + '_' + Math.random() + '-' + shasum(n)
   names[n] = d
