@@ -6,18 +6,22 @@ var fs = require('fs')
 var pull = require('pull-stream')
 
 var Iterator =
-pull.pipeableSource(function (read, close) {
+pull.Source(function (next, close) {
   var i = 0
+  close = close || function (cb) { cb() }
   return function (end, cb) {
     if(end)
       close ? close(function (err) {
         cb(err || true)
       }) : cb && cb(end)
     else
-      read(i++, function (err, data) {
-        process.nextTick(function () {
-          cb(err || data == null, data) //means end in an iterator.
-        })
+      next(i++, function (err, data) {
+        if(err || data == null) {
+          close(function (err) {
+            cb(err || true)
+          })
+        } else
+          cb(null, data) //means end in an iterator.
       })
   }
 })
