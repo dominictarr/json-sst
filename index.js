@@ -4,12 +4,14 @@ var u            = require('./util')
 var pullRange    = require('pull-stream-range')
 var BlockIterator = require('./block-iterator')
 
+//TODO: use bloom filters to remember what keys are present
+//to optimize gets.
+
 var open = function (file, cb) {
   fs.stat(file, function (err, stat) {
     if(err) return cb(err)
     fs.open(file, 'r', function (err, fd) {
       if(err) return cb(err)
-      stat.blklength = 512
       stat.length = Math.ceil(stat.size / stat.blksize)
       stat.fd = fd
       cb(null, stat)
@@ -21,8 +23,6 @@ var open = function (file, cb) {
 var exports = module.exports = function (file) {
   //if(!cb) cb = it, it = null
   var fd, blockSize, blockCount
-
-  //if iterator is null, just open the file.
 
   var emitter = new EventEmitter()
 
@@ -52,6 +52,7 @@ is the same for an iterator as for a get.
     if(!emitter.opened)
       throw new Error('SST is not yet opened!')
     
+    var reverse = opts.reverse
     var range = [opts.start, opts.end]
     if(opts.start && opts.end) range.sort()
     if(opts.reverse) range.reverse()
@@ -59,37 +60,28 @@ is the same for an iterator as for a get.
     opts.start = range[0] || null
     opts.end   = range[1] || null
 
-    //first, just support iterating over the entire sst.    
-    function getStream(i) {
+    function createStream(i) {
       var _opts = u.merge({offset: i}, opts)
       if(isNaN(_opts.offset))
-        throw new Error('i is not numeb')
+        throw new Error('i must be a number')
+
       return BlockIterator(emitter._stat, _opts)
-        .pipe(u.json(opts.reverse))
+        .pipe(u.json(reverse))
 
     }
-    var blockCount = Math.ceil(emitter._stat.size / emitter._stat.blksize)
 
     function compare (a, b) {
-      if(!a || !b) {
-        console.log(a, b)
-        throw new Error('nully')
-      }
-      var mult = opts.reverse ? -1 : 1
       return ( a.key < b.key ? -1 
              : a.key > b.key ?  1 
-             :                  0 ) * mult
+             :                  0 ) * (reverse ? -1 : 1)
     }
+
     var start, end
 
     if(opts.start) start = {key: opts.start}
-    if(opts.end) end = {key: opts.end}
+    if(opts.end)   end   = {key: opts.end}
 
-    //console.log('START END', start, end, compare(start, end))
-
-    return pullRange(getStream, compare, 
-      blockCount, 
-      start, end)
+    return pullRange(createStream, compare, emitter._stat.length, start, end)
   }
 
   emitter.get = function (key, cb) {
@@ -105,28 +97,23 @@ is the same for an iterator as for a get.
 }
 
 
-exports.createSST = function (file, it, cb) {
-  ws = fs.createWriteStream(file)
-  cb = u.once(cb)
-  var meta = {items: 0, length: 0, meta: true}
-  ;(function next () {
-    it.next(function (err, data) {
-      if(err)
-        return cb(err)
-      if(data) {
-        var json = JSON.stringify(data) + '\n'
-        meta.items ++
-        meta.length += json.length
-        if(true === ws.write(json)) next()
-        else ws.once('drain', next)
-      } else {
-        ws.end()
-      }
-    })
-  })()
+var toPull = require('stream-to-pull-stream')
+var pull = require('pull-stream')
 
-  ws.on('error', cb)
-  ws.on('close', cb)
+exports.createSST = function (file, it, cb) {
+  var meta = {items: 0, length: 0, meta: true}
+
+  it
+  .pipe(pull.map(function (e) {
+    var json = JSON.stringify(e) + '\n'
+      meta.items ++
+      meta.length += json.length
+    return json
+  }))
+  .pipe(toPull.sink(
+    fs.createWriteStream(file)
+    .on('close', cb)
+  ))
   
 }
 
