@@ -93,6 +93,5 @@ sst.open(function (err) {
       var l = 100
       while(l--) makeRandomReverse()
 
-
     }))
 })
