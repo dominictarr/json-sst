@@ -43,8 +43,7 @@ is the same for an iterator as for a get.
   }
 
   emitter.all = function (opts) {
-    return BlockIterator(emitter._stat, opts)
-      .pipe(u.json(opts.reverse))
+    return pull(BlockIterator(emitter._stat, opts), u.json(opts.reverse))
   }
 
   emitter.iterator = function (opts) {
@@ -103,17 +102,18 @@ var pull = require('pull-stream')
 exports.createSST = function (file, it, cb) {
   var meta = {items: 0, length: 0, meta: true}
 
-  it
-  .pipe(pull.map(function (e) {
-    var json = JSON.stringify(e) + '\n'
-      meta.items ++
-      meta.length += json.length
-    return json
-  }))
-  .pipe(toPull.sink(
-    fs.createWriteStream(file)
-    .on('close', cb)
-  ))
-  
+  pull(
+    it,
+    pull.map(function (e) {
+      var json = JSON.stringify(e) + '\n'
+        meta.items ++
+        meta.length += json.length
+      return json
+    }),
+    toPull.sink(
+      fs.createWriteStream(file)
+      .on('close', cb)
+    )
+  )
 }
 
