@@ -38,18 +38,22 @@ fs.stat(file, function (err, stat) {
     })
 
     test('json: forward, backward', function (t) {
-      blockIterator(stat)
-      .pipe(u.json())
-      .pipe(pull.writeArray(function (err, fore) {
+      pull(
+        blockIterator(stat),
+        u.json(),
+        pull.writeArray(function (err, fore) {
 
-        blockIterator(stat, {reverse: true})
-        .pipe(u.json(true))
-        .pipe(pull.filter())
-        .pipe(pull.writeArray(function (err, rev) {
-          t.deepEqual(fore, rev.reverse())
-          t.end()
-        }))
-      }))
+          pull(
+            blockIterator(stat, {reverse: true}),
+            u.json(true),
+            pull.filter(),
+            pull.writeArray(function (err, rev) {
+              t.deepEqual(fore, rev.reverse())
+              t.end()
+            })
+          )
+        })
+      )
     })
   })
 })

@@ -15,17 +15,19 @@ exports.iteratorReader = function (read, cb) {
 
 
 exports.json = function (reverse) {
-  return split(null, null, reverse)
-    .pipe(pull.map(function (data) {
-    if(!data) return
-    try { return JSON.parse(data) }
-    catch (err) {
-      if(err && err.name == 'SyntaxError')
-        return
-      throw err
-    }
-   }))
-  .pipe(pull.filter())
+  return pull(
+    split(null, null, reverse),
+    pull.map(function (data) {
+      if(!data) return
+      try { return JSON.parse(data) }
+      catch (err) {
+        if(err && err.name == 'SyntaxError')
+          return
+        throw err
+      }
+    }),
+    pull.filter()
+  )
 }
 
 exports.once = function (fun) {

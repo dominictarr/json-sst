@@ -18,8 +18,9 @@ function collectObject (cb) {
 
 sst.open(function (err) {
 
-  sst.iterator()
-    .pipe(collectObject(function (err, all) {
+  pull(
+    sst.iterator(),
+    collectObject(function (err, all) {
 
       var keys = Object.keys(all)
       console.log('KEYS', keys)
@@ -46,8 +47,9 @@ sst.open(function (err) {
           + JSON.stringify(start)
           + ' - '
           + JSON.stringify(end), function (t) {
-          sst.iterator({start: start, end: end})
-            .pipe(collectObject(function (err, o) {
+          pull(
+            sst.iterator({start: start, end: end}),
+            collectObject(function (err, o) {
               //KEYs *must* be in order.
               var ks = Object.keys(o)
               t.deepEqual(ks, ks.slice().sort())
@@ -56,7 +58,8 @@ sst.open(function (err) {
                 t.equal(o[k], all[k])
               })
               t.end()
-            }))
+            })
+          )
         })
       }
 
@@ -73,19 +76,23 @@ sst.open(function (err) {
           + JSON.stringify(end)
           + ' (reverse)', function (t) {
 
-          sst.iterator({start: start, end: end})
-            .pipe(pull.map('key'))
-            .pipe(pull.collect(function (err, keys) {
+          pull(
+            sst.iterator({start: start, end: end}),
+            pull.map('key'),
+            pull.collect(function (err, keys) {
               //KEYs *must* be in order.
 
-              sst.iterator({start: start, end: end, reverse: true})
-                .pipe(pull.map('key'))
-                .pipe(pull.collect(function (err, _keys) {
+              pull(
+                sst.iterator({start: start, end: end, reverse: true}),
+                pull.map('key'),
+                pull.collect(function (err, _keys) {
                   //KEYs *must* be in order.
                   t.deepEqual(keys, _keys.reverse())
                   t.end()
-                }))
-            }))
+                })
+              )
+            })
+          )
 
         })
       }
@@ -93,5 +100,6 @@ sst.open(function (err) {
       var l = 100
       while(l--) makeRandomReverse()
 
-    }))
+    })
+  )
 })
