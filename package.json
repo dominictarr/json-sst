@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "async-iterator": "~1.1.0",
-    "pull-stream": "~2.18.1",
+    "pull-stream": "~2.22.0",
     "pull-through": "~1.0.7",
     "pull-split": "~0.1.1",
     "pull-stream-range": "~1.1.0",
