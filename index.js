@@ -45,14 +45,14 @@ is the same for an iterator as for a get.
   emitter.location = file
 
   emitter.all = function (opts) {
-    return pull(BlockIterator(emitter._stat, opts), u.json(opts.reverse))
+    return BlockIterator(emitter._stat, opts).pipe(u.json(opts.reverse))
   }
 
   emitter.iterator = function (opts) {
     opts = opts || {}
     if(!emitter.opened)
       throw new Error('SST is not yet opened!')
-    
+
     var reverse = opts.reverse
     var range = [opts.start, opts.end]
     if(opts.start && opts.end) range.sort()
@@ -66,8 +66,7 @@ is the same for an iterator as for a get.
       if(isNaN(_opts.offset))
         throw new Error('i must be a number')
 
-      return BlockIterator(emitter._stat, _opts)
-        .pipe(u.json(reverse))
+      return BlockIterator(emitter._stat, _opts).pipe(u.json(reverse))
 
     }
 
@@ -105,7 +104,7 @@ var pull = require('pull-stream')
 
 exports.createStream = function (file, cb) {
   var meta = {items: 0, length: 0, meta: true}
-  console.error(file, cb)
+
   return pull(
     pull.map(function (e) {
       var json = JSON.stringify(e) + '\n'
