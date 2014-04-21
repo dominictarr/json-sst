@@ -70,8 +70,8 @@ is the same for an iterator as for a get.
     }
 
     function compare (a, b) {
-      return ( a.key < b.key ? -1 
-             : a.key > b.key ?  1 
+      return ( a.key < b.key ? -1
+             : a.key > b.key ?  1
              :                  0 ) * (reverse ? -1 : 1)
     }
 
@@ -80,7 +80,7 @@ is the same for an iterator as for a get.
     if(opts.start) start = {key: opts.start}
     if(opts.end)   end   = {key: opts.end}
 
-    return pullRange(createStream, compare, emitter._stat.length, start, end)
+     return pullRange(createStream, compare, emitter._stat.length, start, end)
   }
 
   emitter.get = function (key, cb) {
@@ -99,11 +99,10 @@ is the same for an iterator as for a get.
 var toPull = require('stream-to-pull-stream')
 var pull = require('pull-stream')
 
-exports.createSST = function (file, it, cb) {
+exports.createSST = function (file, cb) {
   var meta = {items: 0, length: 0, meta: true}
 
-  pull(
-    it,
+  return pull(
     pull.map(function (e) {
       var json = JSON.stringify(e) + '\n'
         meta.items ++
