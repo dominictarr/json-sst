@@ -25,7 +25,7 @@ var it = pull.values(array)
 
 var SST = require('../')
 var sstFile = '/tmp/whatever-test.json.sst'
-pull(it, SST.createSST(sstFile, function (err) {
+pull(it, SST.createStream(sstFile, function (err) {
   console.log('create')
   var sst = SST(sstFile)
 
