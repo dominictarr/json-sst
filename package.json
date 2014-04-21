@@ -1,7 +1,7 @@
 {
   "name": "json-sst",
   "description": "A new line delimited json Sorted String Table",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "homepage": "https://github.com/dominictarr/json-sst",
   "repository": {
     "type": "git",
