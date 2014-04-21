@@ -25,7 +25,7 @@ var it = pull.values(array)
 
 var SST = require('../')
 var sstFile = '/tmp/whatever-test.json.sst'
-SST.createSST(sstFile, it, function (err) {
+pull(it, SST.createSST(sstFile, function (err) {
   console.log('create')
   var sst = SST(sstFile)
 
@@ -36,13 +36,15 @@ SST.createSST(sstFile, it, function (err) {
       t.plan(opts.n || 200)
       var i = 0
 
-      it
-      .pipe(pull.through(console.log))
-      .pipe(pull.drain(function (item) {
-        t.deepEqual(item, array[i++])
-      }, function () {
-        return t.end()
-      }))
+      pull(
+        it,
+        pull.through(console.log),
+        pull.drain(function (item) {
+          t.deepEqual(item, array[i++])
+        }, function () {
+          return t.end()
+        })
+      )
 
     })
 
@@ -53,7 +55,7 @@ SST.createSST(sstFile, it, function (err) {
 
       var i = array.length
 
-      it.pipe(pull.drain(function (item) {
+      pull(it, pull.drain(function (item) {
           --i
           t.deepEqual(item, array[i])
           assert.deepEqual(item, array[i])
@@ -64,5 +66,4 @@ SST.createSST(sstFile, it, function (err) {
     })
   })
 
-})
-
+}))
