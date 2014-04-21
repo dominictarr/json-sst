@@ -1,6 +1,5 @@
 
 var fs = require('fs')
-//var Iterator = require('./pull-iterator') //require('async-iterator')
 
 
 var pull = require('pull-stream')
@@ -25,8 +24,6 @@ pull.Source(function (next, close) {
       })
   }
 })
-
-var shasum = require('shasum')
 
 function calcBlock(stat, opts, i) {
   opts = opts || {}
