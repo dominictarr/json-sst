@@ -42,6 +42,8 @@ is the same for an iterator as for a get.
     })
   }
 
+  emitter.location = file
+
   emitter.all = function (opts) {
     return pull(BlockIterator(emitter._stat, opts), u.json(opts.reverse))
   }
@@ -83,6 +85,8 @@ is the same for an iterator as for a get.
      return pullRange(createStream, compare, emitter._stat.length, start, end)
   }
 
+  emitter.createReadStream = emitter.iterator
+
   emitter.get = function (key, cb) {
     var read = emitter.iterator({start: key, end: key})
     read(null, function (err, data) {
@@ -99,9 +103,9 @@ is the same for an iterator as for a get.
 var toPull = require('stream-to-pull-stream')
 var pull = require('pull-stream')
 
-exports.createSST = function (file, cb) {
+exports.createStream = function (file, cb) {
   var meta = {items: 0, length: 0, meta: true}
-
+  console.error(file, cb)
   return pull(
     pull.map(function (e) {
       var json = JSON.stringify(e) + '\n'
@@ -111,7 +115,12 @@ exports.createSST = function (file, cb) {
     }),
     toPull.sink(
       fs.createWriteStream(file)
-      .on('close', cb)
+      .on('close', function () {
+        var sst = exports(file)
+        sst.open(function (err) {
+          cb(err, sst)
+        })
+      })
     )
   )
 }
