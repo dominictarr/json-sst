@@ -95,6 +95,11 @@ is the same for an iterator as for a get.
     })
   }
 
+  emitter.close = function (cb) {
+    if(!fd) return cb(new Error('not open'))
+    fs.close(fd, cb)
+  }
+
   return emitter
 }
 
@@ -104,8 +109,19 @@ var pull = require('pull-stream')
 
 exports.createStream = function (file, cb) {
   var meta = {items: 0, length: 0, meta: true}
-
   return pull(
+    function (read) {
+      var max
+      return function (abort, _cb) {
+        read(abort, function (end, data) {
+          if(end) return _cb(end, data)
+          if(max === undefined) max = data.key
+          //TODO - FIX toPull to handle errors, and then fix this.
+          else if(max >= data.key) return cb(new Error('out of order'))
+          max = data.key; _cb(end, data)
+        })
+      }
+    },
     pull.map(function (e) {
       var json = JSON.stringify(e) + '\n'
         meta.items ++
