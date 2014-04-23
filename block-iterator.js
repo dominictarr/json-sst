@@ -56,6 +56,7 @@ var blockIterator = module.exports = function (stat, opts) {
     var range = calcBlock(stat, opts, i)
 
     if(!range) return cb(null, null)
+    //this is not good memory management!
     var block = new Buffer(range.length)
     fs.read(stat.fd, block, 0, range.length, range.position, function (err) {
       cb(err, block.toString())
